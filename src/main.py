@@ -6,10 +6,10 @@ import sys
 
 def main():
     base_path = sys.argv[1] if len(sys.argv) > 1 else "/"
-    static_dir = '/Users/saswat/workspace/github.com/sswtshoo/static-site-generator/static'
-    public_dir = '/Users/saswat/workspace/github.com/sswtshoo/static-site-generator/docs'
-    content_dir = '/Users/saswat/workspace/github.com/sswtshoo/static-site-generator/content'
-    template_dir = '/Users/saswat/workspace/github.com/sswtshoo/static-site-generator/template.html'
+    static_dir = 'static'
+    public_dir = 'docs'
+    content_dir = 'content'
+    template_dir = 'template.html'
     if not os.path.exists(public_dir):
         os.mkdir(public_dir)
     for file in os.listdir(public_dir):
