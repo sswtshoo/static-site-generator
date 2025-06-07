@@ -2,10 +2,12 @@ from textnode import TextNode, TextType
 from htmlnode import HTMLNode, LeafNode, ParentNode
 import os, shutil
 from markdown_blocks import markdown_to_html_node, extract_title
+import sys
 
 def main():
+    base_path = sys.argv[1] if len(sys.argv) > 1 else "/"
     static_dir = '/Users/saswat/workspace/github.com/sswtshoo/static-site-generator/static'
-    public_dir = '/Users/saswat/workspace/github.com/sswtshoo/static-site-generator/public'
+    public_dir = '/Users/saswat/workspace/github.com/sswtshoo/static-site-generator/docs'
     content_dir = '/Users/saswat/workspace/github.com/sswtshoo/static-site-generator/content'
     template_dir = '/Users/saswat/workspace/github.com/sswtshoo/static-site-generator/template.html'
     if not os.path.exists(public_dir):
@@ -16,11 +18,11 @@ def main():
             shutil.rmtree(file_path)
         else:
             os.remove(file_path)
-
+    
     del_and_copy_files(static_dir, public_dir)
-    generate_pages_recursive(content_dir, template_dir, public_dir)
+    generate_pages_recursive(content_dir, template_dir, public_dir, base_path)
 
-def generate_page(from_path: str, template_path: str, dest_path: str):
+def generate_page(from_path: str, template_path: str, dest_path: str, base_path: str):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
     from_file = open(from_path, 'r')
@@ -32,21 +34,26 @@ def generate_page(from_path: str, template_path: str, dest_path: str):
     template = template_file.read()
     template = template.replace("{{ Title }}", title)
     template = template.replace("{{ Content }}", from_html)
+    template = template.replace('href="/', f'href="{base_path}')
+    template = template.replace('src="/', f'src="{base_path}')
     dest_dir_path = os.path.dirname(dest_path)
     if dest_dir_path != "":
         os.makedirs(dest_dir_path, exist_ok=True)
     dest_file = open(dest_path, 'w')
     dest_file.write(template)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
-    for root, _, files in os.walk(dir_path_content):
-        for file in files:
-            if file.endswith('.md'):
-                file_path = os.path.join(root, file)
-                relative_path = os.path.relpath(file_path, dir_path_content)
-                html_path = os.path.splitext(relative_path)[0] + '.html'
-                dest_path = os.path.join(dest_dir_path, html_path)
-                generate_page(file_path, template_path, dest_path)
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, base_path):
+
+    for file in os.listdir(dir_path_content):
+        dest_path = os.path.join(dest_dir_path, file)
+        curr_path = os.path.join(dir_path_content, file)
+        if os.path.isdir(curr_path):
+            os.makedirs(dest_path, exist_ok=True)
+            generate_pages_recursive(curr_path, template_path, dest_path, base_path)
+        elif file.endswith('.md'):
+            html_name = os.path.splitext(file)[0] + '.html'
+            dest_file_path = os.path.join(dest_dir_path, html_name)
+            generate_page(curr_path, template_path, dest_file_path, base_path)
 
 def del_and_copy_files(source, destination):
     if not os.path.exists(source):
